@@ -52,11 +52,11 @@ def scrape_keyword(keyword: str, source_price_eur: float, source_price_cny: floa
             if collected >= MAX_RESULTS_PER_KEYWORD:
                 break
 
-            title_el = card.select_one("h2 a span")
+            # Title: "h2 span" works; "h2 a span" breaks when anchor wraps differently
+            title_el = card.select_one("h2 span")
             price_whole = card.select_one(".a-price-whole")
             price_frac = card.select_one(".a-price-fraction")
             img_el = card.select_one("img.s-image")
-            link_el = card.select_one("h2 a")
 
             if not (title_el and price_whole):
                 continue
@@ -66,8 +66,14 @@ def scrape_keyword(keyword: str, source_price_eur: float, source_price_cny: floa
             if amazon_price is None:
                 continue
 
-            product_url = AMAZON_DE_BASE_URL + link_el["href"] if link_el else None
-            asin = card.get("data-asin", str(uuid.uuid4()))
+            # Build URL from ASIN (most reliable) or from any /dp/ link on the card
+            asin = card.get("data-asin", "")
+            if asin:
+                product_url = f"{AMAZON_DE_BASE_URL}/dp/{asin}"
+            else:
+                dp_link = card.select_one('a[href*="/dp/"]')
+                product_url = (AMAZON_DE_BASE_URL + dp_link["href"]) if dp_link else None
+                asin = str(uuid.uuid4())
 
             yield Product(
                 product_id=f"amz_{asin}",

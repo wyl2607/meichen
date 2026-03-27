@@ -38,32 +38,46 @@ def _parse_price_cny(text: str) -> float | None:
 
 
 def scrape_keyword(keyword: str) -> Iterator[Product]:
-    """Yield Product objects with source pricing for a given keyword."""
+    """Yield Product objects with source pricing for a given keyword.
+
+    ScraperAPI routes via EU IP so AliExpress returns prices in EUR.
+    We store as source_price_eur and back-calculate source_price_cny.
+    """
     search_url = f"{ALIEXPRESS_BASE_URL}/wholesale?SearchText={requests.utils.quote(keyword)}"
     collected = 0
 
-    resp = requests.get(_scraper_api_url(search_url), timeout=30)
-    resp.raise_for_status()
+    try:
+        resp = requests.get(_scraper_api_url(search_url), timeout=30)
+        resp.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        import logging
+        logging.getLogger(__name__).warning("AliExpress fetch error: %s", e)
+        return
+
     soup = BeautifulSoup(resp.text, "lxml")
 
-    for item in soup.select(".list--gallery--34TropR .item--wrap--2dh0oCq"):
+    # Current selector as of 2025: container = .search-item-card-wrapper-gallery
+    # price in .lw_kt (discounted/current price), title in h3, link in a.search-card-item
+    for item in soup.select(".search-item-card-wrapper-gallery"):
         if collected >= MAX_RESULTS_PER_KEYWORD:
             break
 
         title_el = item.select_one("h3")
-        price_el = item.select_one(".price--currentPriceText--V8_y_b5")
+        price_el = item.select_one(".lw_kt")   # current/sale price in EUR
         img_el = item.select_one("img")
-        link_el = item.select_one("a")
+        link_el = item.select_one("a.search-card-item") or item.select_one("a")
 
         if not (title_el and price_el):
             continue
 
-        price_cny = _parse_price_cny(price_el.get_text(strip=True))
-        if price_cny is None:
+        # Price is displayed in EUR by ScraperAPI EU routing
+        price_eur = _parse_price_cny(price_el.get_text(strip=True))
+        if price_eur is None or price_eur <= 0:
             continue
 
-        price_eur = round(price_cny * CNY_TO_EUR, 2)
-        product_url = "https:" + link_el["href"] if link_el and link_el.get("href", "").startswith("//") else None
+        price_cny = round(price_eur / CNY_TO_EUR, 2)
+        href = link_el.get("href", "") if link_el else ""
+        product_url = ("https:" + href) if href.startswith("//") else href or None
 
         yield Product(
             product_id=f"ali_{uuid.uuid4().hex[:12]}",

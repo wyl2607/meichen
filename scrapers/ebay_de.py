@@ -41,9 +41,16 @@ def scrape_keyword(keyword: str) -> Iterator[Product]:
         keywords=requests.utils.quote(keyword),
         count=min(MAX_RESULTS_PER_KEYWORD, 100),
     )
-    resp = requests.get(url, timeout=15)
-    resp.raise_for_status()
-    data = resp.json()
+    try:
+        resp = requests.get(url, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+    except requests.exceptions.HTTPError as e:
+        import logging
+        logging.getLogger(__name__).warning(
+            "eBay API error (check EBAY_APP_ID in .env): %s", e
+        )
+        return
 
     try:
         items = (
