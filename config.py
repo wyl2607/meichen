@@ -41,9 +41,15 @@ EBAY_APP_ID: str = os.getenv("EBAY_APP_ID", "REPLACE_ME")
 EBAY_CERT_ID: str = os.getenv("EBAY_CERT_ID", "REPLACE_ME")
 
 # ── 爬虫行为 ──────────────────────────────────────────────────────────────────
-REQUEST_DELAY_SECONDS: float = 2.0      # 每次请求间隔（秒）
-MAX_RESULTS_PER_KEYWORD: int = 50       # 每个关键词最多抓取商品数
+REQUEST_DELAY_SECONDS: float = 3.0      # 每次请求最少间隔（秒），比之前的 2s 更保守
+REQUEST_DELAY_JITTER: float = 2.0       # 在基础延迟上叠加 0~2s 随机抖动，防止被识别为机器人
+MAX_RESULTS_PER_KEYWORD: int = 20       # 每个关键词最多抓取商品数（AliExpress 实际约 12 条/页）
 HEADLESS_BROWSER: bool = True           # Selenium 是否无头模式
+
+# ── API 用量保护 ───────────────────────────────────────────────────────────────
+# ScraperAPI 免费额度 5000 次/月。10 关键词/次 × 30 天 = 300 次/月，远低于上限。
+# 此处设置单次运行上限作为安全闸，防止关键词列表膨胀时超额。
+SCRAPER_API_MAX_CALLS_PER_RUN: int = 20  # 单次 pipeline 最多调用 ScraperAPI 次数
 
 # ── 目标站点 URL ───────────────────────────────────────────────────────────────
 AMAZON_DE_BASE_URL: str = "https://www.amazon.de"

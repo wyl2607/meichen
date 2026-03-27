@@ -4,6 +4,7 @@ Uses ScraperAPI proxy to bypass bot detection.
 """
 from __future__ import annotations
 
+import random
 import time
 import uuid
 from typing import Iterator
@@ -15,8 +16,10 @@ from config import (
     ALIEXPRESS_BASE_URL,
     CNY_TO_EUR,
     MAX_RESULTS_PER_KEYWORD,
+    REQUEST_DELAY_JITTER,
     REQUEST_DELAY_SECONDS,
     SCRAPER_API_KEY,
+    SCRAPER_API_MAX_CALLS_PER_RUN,
 )
 from models import Product
 
@@ -37,21 +40,35 @@ def _parse_price_cny(text: str) -> float | None:
     return None
 
 
+# 模块级 ScraperAPI 调用计数器（同一进程内跨关键词累计）
+_scraper_api_calls: int = 0
+
+
 def scrape_keyword(keyword: str) -> Iterator[Product]:
     """Yield Product objects with source pricing for a given keyword.
 
     ScraperAPI routes via EU IP so AliExpress returns prices in EUR.
     We store as source_price_eur and back-calculate source_price_cny.
     """
+    global _scraper_api_calls
+    import logging as _log
+
+    if _scraper_api_calls >= SCRAPER_API_MAX_CALLS_PER_RUN:
+        _log.getLogger(__name__).warning(
+            "ScraperAPI 单次调用上限 %d 已达到，跳过关键词 %r（保护免费额度）",
+            SCRAPER_API_MAX_CALLS_PER_RUN, keyword,
+        )
+        return
+
     search_url = f"{ALIEXPRESS_BASE_URL}/wholesale?SearchText={requests.utils.quote(keyword)}"
     collected = 0
 
     try:
+        _scraper_api_calls += 1
         resp = requests.get(_scraper_api_url(search_url), timeout=30)
         resp.raise_for_status()
     except requests.exceptions.RequestException as e:
-        import logging
-        logging.getLogger(__name__).warning("AliExpress fetch error: %s", e)
+        _log.getLogger(__name__).warning("AliExpress fetch error: %s", e)
         return
 
     soup = BeautifulSoup(resp.text, "lxml")
@@ -94,4 +111,4 @@ def scrape_keyword(keyword: str) -> Iterator[Product]:
             product_url=product_url,
         )
         collected += 1
-        time.sleep(REQUEST_DELAY_SECONDS)
+        time.sleep(REQUEST_DELAY_SECONDS + random.uniform(0, REQUEST_DELAY_JITTER))

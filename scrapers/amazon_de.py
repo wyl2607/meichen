@@ -4,6 +4,7 @@ Uses requests + BeautifulSoup; falls back to Selenium for JS-heavy pages.
 """
 from __future__ import annotations
 
+import random
 import time
 import uuid
 from typing import Iterator
@@ -14,20 +15,31 @@ from bs4 import BeautifulSoup
 from config import (
     AMAZON_DE_BASE_URL,
     MAX_RESULTS_PER_KEYWORD,
+    REQUEST_DELAY_JITTER,
     REQUEST_DELAY_SECONDS,
     SCRAPER_API_KEY,
 )
 from models import Product
 
 
-_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/123.0 Safari/537.36"
-    ),
-    "Accept-Language": "de-DE,de;q=0.9",
-}
+# 多个真实浏览器 UA，每次请求随机选一个，降低被识别为爬虫的风险
+_USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
+]
+
+
+def _make_headers() -> dict:
+    return {
+        "User-Agent": random.choice(_USER_AGENTS),
+        "Accept-Language": "de-DE,de;q=0.9,en;q=0.7",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "DNT": "1",
+    }
 
 
 def _parse_price(text: str) -> float | None:
@@ -44,8 +56,20 @@ def scrape_keyword(keyword: str, source_price_eur: float, source_price_cny: floa
     collected = 0
 
     while search_url and collected < MAX_RESULTS_PER_KEYWORD:
-        resp = requests.get(search_url, headers=_HEADERS, timeout=15)
-        resp.raise_for_status()
+        try:
+            resp = requests.get(search_url, headers=_make_headers(), timeout=15)
+            if resp.status_code in (429, 503):
+                import logging
+                logging.getLogger(__name__).warning(
+                    "Amazon.de 返回 %d（限速/封禁信号），跳过关键词 %r，明天再试",
+                    resp.status_code, keyword,
+                )
+                return
+            resp.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            import logging
+            logging.getLogger(__name__).warning("Amazon.de 请求失败 (%s)，跳过关键词 %r", e, keyword)
+            return
         soup = BeautifulSoup(resp.text, "lxml")
 
         for card in soup.select('[data-component-type="s-search-result"]'):
@@ -94,4 +118,4 @@ def scrape_keyword(keyword: str, source_price_eur: float, source_price_cny: floa
         # Pagination
         next_el = soup.select_one("a.s-pagination-next")
         search_url = (AMAZON_DE_BASE_URL + next_el["href"]) if next_el else None
-        time.sleep(REQUEST_DELAY_SECONDS)
+        time.sleep(REQUEST_DELAY_SECONDS + random.uniform(0, REQUEST_DELAY_JITTER))
