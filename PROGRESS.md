@@ -161,6 +161,48 @@ Google Sheets: ❌ API 未启用（见下方）
 
 ---
 
+---
+
+## Sprint 3 — VPS 部署与云同步架构
+
+### [2026-03-27] VPS 部署（RackNerd via Tailscale）
+
+**目标**：将 pipeline 部署到 VPS，实现 24h 自动运行，建立安全的代码+密钥同步机制
+
+**VPS 环境**：
+- OS：Ubuntu 22.04 LTS，Python 3.12.3
+- Tailscale hostname：`racknerd-32738e2.tail27b5c.ts.net`，IP：`100.125.28.79`
+- 磁盘：24GB（剩余 6.9GB），内存：961MB（swap 5GB）
+
+**部署步骤**：
+1. VPS 通过 SSH（Tailscale 加密隧道）可达，Python 3.12 + pip3 + git 预装 ✅
+2. `git clone https://github.com/wyl2607/meichen.git /opt/meichen` 从 GitHub 拉取代码
+3. `scp .env credentials.json root@100.125.28.79:/opt/meichen/`（Tailscale 加密，密钥不经明文网络）
+4. VPS 上创建 Python venv，`pip install -r requirements.txt`
+5. 密钥文件权限加固：`chmod 600 .env credentials.json`
+6. 创建 `/etc/systemd/system/meichen-scout.service`，开机自启
+
+**VPS Pipeline 验证结果**（单关键词 LED Streifen）：
+- AliExpress：11 条
+- Amazon.de：50 条
+- 利润率 ≥30%：37 条
+- Top 商品：78.6% 利润率 ✅
+
+**新增文件**：
+- `CLAUDE.md`：Claude Code 项目上下文文档（架构、命令、踩坑记录）
+- `sync.sh`：一键同步脚本（代码走 GitHub，密钥走 Tailscale SCP）
+
+**云备份策略（安全优先）**：
+
+| 类型 | 存储位置 | 传输方式 | 安全级别 |
+|------|---------|---------|---------|
+| 代码 | GitHub wyl2607/meichen（public） | HTTPS push | ✅ 无敏感信息 |
+| 密钥（.env） | VPS /opt/meichen/（chmod 600） | Tailscale SCP | ✅ E2E 加密 |
+| 密钥（credentials.json） | VPS /opt/meichen/（chmod 600） | Tailscale SCP | ✅ E2E 加密 |
+| 数据快照 | VPS data/raw/ + 本地 data/raw/ | 双份本地 | ✅ 不上云 |
+
+---
+
 ## 当前状态总览
 
 ```
@@ -176,6 +218,8 @@ Google Sheets: ❌ API 未启用（见下方）
 │  原始快照保存           │  ✅ 正常（data/raw/）                           │
 │  Google Sheets 写入     │  ⚠️  待操作（需启用 Sheets API + Drive API）    │
 │  GitHub 仓库            │  ✅ 最新代码已推送（wyl2607/meichen main）      │
+│  VPS 部署               │  ✅ 运行中（systemd，每 24h，100.125.28.79）   │
+│  云同步脚本             │  ✅ sync.sh（代码→GitHub，密钥→Tailscale SCP） │
 └─────────────────────────┴────────────────────────────────────────────────┘
 ```
 
@@ -189,14 +233,16 @@ Google Sheets: ❌ API 未启用（见下方）
 | 🔴 高 | 启用 Google Drive API | 用户 | 同上，Drive API 也需要启用 |
 | 🟡 中 | 配置 eBay App ID | 用户 | 申请地址：developer.ebay.com |
 | 🟡 中 | 删除 GitHub master 分支 | 用户 | 先在 GitHub Settings 将默认分支改为 main |
+| 🟡 中 | 查看 VPS 每日结果 | 用户 | `bash sync.sh --logs` 或 SSH 到 VPS 查看 |
 | 🟢 低 | 接入 Amazon PA-API 5.0 | 工程 | 替代直接 HTML 抓取，更稳定 |
 | 🟢 低 | 定期维护 AliExpress 选择器 | 工程 | AliExpress 频繁改版，建议每月检查 |
 
 ---
 
-## Git 提交记录（本 Sprint）
+## Git 提交记录
 
 | Commit | 描述 |
 |--------|------|
 | `6a0ea8a` | fix: update scrapers to match current DOM structure |
 | `3b685c4` | fix: make Google Sheets write non-fatal in pipeline |
+| `10523d0` | docs: add REQUIREMENTS.md and PROGRESS.md |
