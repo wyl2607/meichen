@@ -1,6 +1,6 @@
 # Meichen — Quality from China, Delivered to Europe
 
-**Meichen** (美晨) is a cross-border e-commerce company bridging exceptional Chinese manufacturing with European consumers. We curate, source, and sell products directly on major European online marketplaces — bringing value, quality, and discovery to everyday shoppers across Germany and Europe.
+**Meichen**  is a cross-border e-commerce company bridging exceptional Chinese manufacturing with European consumers. We curate, source, and sell products directly on major European online marketplaces — bringing value, quality, and discovery to everyday shoppers across Germany and Europe.
 
 ---
 
