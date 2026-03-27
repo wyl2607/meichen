@@ -1,6 +1,6 @@
 # Meichen — Quality from China, Delivered to Europe
 
-**Meichen** is a cross-border e-commerce company bridging exceptional Chinese manufacturing with European consumers. We curate, source, and sell products directly on Amazon.de and eBay.de — bringing value, quality, and discovery to everyday shoppers across Germany and Europe.
+**Meichen** (美晨) is a cross-border e-commerce company bridging exceptional Chinese manufacturing with European consumers. We curate, source, and sell products directly on major European online marketplaces — bringing value, quality, and discovery to everyday shoppers across Germany and Europe.
 
 ---
 
@@ -18,8 +18,8 @@ We personally evaluate hundreds of products, select only those that meet Europea
 
 ## What We Do
 
-### 🛍️ Direct Sales on Amazon.de & eBay.de
-We operate as a verified seller on major European marketplaces. Every product we list is:
+### 🛍️ Direct Sales on European Marketplaces
+We operate as a verified seller on major European online platforms. Every product we list is:
 - Sourced directly from trusted Chinese manufacturers
 - Evaluated for quality, safety compliance, and market fit
 - Priced competitively for the German and broader European market
@@ -28,27 +28,19 @@ We operate as a verified seller on major European marketplaces. Every product we
 Our in-house team conducts continuous market research to identify trending, underserved product categories across Europe. We analyze pricing trends, customer demand, and competitive landscapes to ensure every product we launch has genuine market potential.
 
 ### 📦 End-to-End Fulfillment
-We manage the full supply chain — from factory to customer door — leveraging Amazon FBA and direct shipping infrastructure to guarantee reliable, fast delivery across the EU.
+We manage the full supply chain — from factory to customer door — leveraging established fulfillment infrastructure to guarantee reliable, fast delivery across the EU.
 
 ---
 
 ## Why Meichen
 
-| | Meichen |
+|  | Meichen |
 |---|---|
 | **Sourcing** | Direct factory relationships in China |
-| **Markets** | Amazon.de · eBay.de · EU-wide shipping |
+| **Markets** | Germany · EU-wide shipping |
 | **Curation** | Every SKU hand-picked, not bulk-listed |
 | **Compliance** | CE marking, EU safety standards verified |
 | **Customer focus** | German-language support, local return policy |
-
----
-
-## Technology
-
-This repository contains internal tools that power Meichen's product research operations — including market price monitoring, margin analysis, and inventory planning utilities. These tools help our team make faster, data-driven decisions about which products to bring to market.
-
-We use the **Amazon Product Advertising API (PA-API 5.0)** to access real-time product data, pricing, and availability from Amazon.de — enabling accurate competitive analysis and ensuring our listings reflect current market conditions.
 
 ---
 
@@ -62,7 +54,7 @@ We built Meichen to be that trusted bridge.
 
 ## Markets & Presence
 
-- 🇩🇪 **Germany** — Primary market, Amazon.de and eBay.de seller
+- 🇩🇪 **Germany** — Primary market, active seller on major German platforms
 - 🇪🇺 **Europe** — EU-wide shipping from our German logistics hub
 - 🇨🇳 **China** — Direct sourcing network across Guangdong, Zhejiang, and Fujian provinces
 
@@ -74,7 +66,6 @@ For business inquiries, wholesale partnerships, or supplier collaboration:
 
 📧 contact@meichen.eu *(coming soon)*
 🌐 www.meichen.eu *(in development)*
-🛒 [Find us on Amazon.de](#) *(listing in progress)*
 
 ---
 
