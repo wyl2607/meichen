@@ -70,10 +70,19 @@ def run_pipeline() -> None:
     # 6. Save raw snapshot
     _save_raw(enriched)
 
-    # 7. Write to Google Sheets
-    written = write_products(profitable)
-    log.info("Written to Sheets: %d rows", written)
-    log.info("Pipeline complete.")
+    # 7. Write to Google Sheets (non-fatal — pipeline succeeds even if Sheets is misconfigured)
+    try:
+        written = write_products(profitable)
+        log.info("Written to Sheets: %d rows", written)
+    except Exception as e:
+        log.warning(
+            "Google Sheets write skipped (%s). "
+            "Enable the API at: https://console.developers.google.com/apis/api/sheets.googleapis.com/overview "
+            "and ensure the sheet is shared with the service account.",
+            e,
+        )
+        written = 0
+    log.info("Pipeline complete. Profitable products found: %d", len(profitable))
 
 
 def _save_raw(products: list[Product]) -> None:
