@@ -1,0 +1,40 @@
+# ── 敏感文件（绝对不能上传）────────────────────────────
+.env
+credentials.json
+*.json.key
+service_account*.json
+
+# ── 原始数据快照（本地生成，不入库）──────────────────────
+data/raw/*.json
+
+# ── Python 编译缓存 ───────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.mypy_cache/
+.ruff_cache/
+
+# ── 虚拟环境 ──────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── IDE / 编辑器 ───────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── 测试覆盖率 ─────────────────────────────────────────
+.coverage
+htmlcov/
+.pytest_cache/
+
+# ── 构建产物 ───────────────────────────────────────────
+dist/
+build/
+*.egg-info/
